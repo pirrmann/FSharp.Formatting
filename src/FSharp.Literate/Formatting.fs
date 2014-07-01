@@ -16,7 +16,7 @@ module internal Formatting =
   let format doc outputKind = 
     match outputKind with
     | OutputKind.Latex -> Markdown.WriteLatex(doc)
-    | OutputKind.Html -> Markdown.WriteHtml(doc)
+    | OutputKind.Html(mode) -> Markdown.WriteHtml(doc, mode)
 
   /// Try find first-level heading in the paragraph collection
   let findHeadings paragraphs (outputKind:OutputKind) =              
@@ -102,7 +102,7 @@ module Templating =
     // To avoid clashes in templating use {contents} for Latex and older {document} for HTML
     let contentTag = 
       match ctx.OutputKind with 
-      | OutputKind.Html -> "document" 
+      | OutputKind.Html(_) -> "document" 
       | OutputKind.Latex -> "contents" 
 
     // Replace all special elements with ordinary Html/Latex Markdown

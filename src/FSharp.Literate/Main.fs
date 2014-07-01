@@ -22,7 +22,7 @@ type Literate private () =
       GenerateLineNumbers = defaultArg lineNumbers true
       IncludeSource = defaultArg includeSource false
       Prefix = defaultArg prefix "fs"
-      OutputKind = defaultArg format OutputKind.Html
+      OutputKind = defaultArg format (OutputKind.Html(Html.FormattingMode.Default))
       LayoutRoots = defaultArg layoutRoots [] }
   
   /// Build default options context for parsing literate scripts/documents
@@ -38,10 +38,10 @@ type Literate private () =
   
   /// Get default output file name, given various information
   static let defaultOutput output input kind =
-    match output, defaultArg kind OutputKind.Html with 
+    match output, defaultArg kind (OutputKind.Html(Html.FormattingMode.Default)) with 
     | Some out, _ -> out
     | _, OutputKind.Latex -> Path.ChangeExtension(input, "tex")
-    | _, OutputKind.Html -> Path.ChangeExtension(input, "html")
+    | _, OutputKind.Html(_) -> Path.ChangeExtension(input, "html")
       
   /// Apply the specified transformations to a document
   static let transform references doc =
@@ -95,7 +95,7 @@ type Literate private () =
   // ------------------------------------------------------------------------------------
 
   static member WriteHtml(doc:LiterateDocument, ?prefix, ?lineNumbers) =
-    let ctx = formattingContext None (Some OutputKind.Html) prefix lineNumbers None None None
+    let ctx = formattingContext None (Some (OutputKind.Html(Html.FormattingMode.Default))) prefix lineNumbers None None None
     let doc = Transformations.replaceLiterateParagraphs ctx doc
     Markdown.WriteHtml(MarkdownDocument(doc.Paragraphs @ [InlineBlock doc.FormattedTips], doc.DefinedLinks))
 
@@ -105,7 +105,7 @@ type Literate private () =
     Markdown.WriteLatex(MarkdownDocument(doc.Paragraphs, doc.DefinedLinks))
 
   static member WriteHtml(doc:LiterateDocument, writer:TextWriter, ?prefix, ?lineNumbers) =
-    let ctx = formattingContext None (Some OutputKind.Html) prefix lineNumbers None None None
+    let ctx = formattingContext None (Some (OutputKind.Html(Html.FormattingMode.Default))) prefix lineNumbers None None None
     let doc = Transformations.replaceLiterateParagraphs ctx doc
     Markdown.WriteHtml(MarkdownDocument(doc.Paragraphs @ [InlineBlock doc.FormattedTips], doc.DefinedLinks), writer)
 

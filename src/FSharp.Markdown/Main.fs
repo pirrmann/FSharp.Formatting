@@ -61,11 +61,18 @@ type Markdown =
   static member Parse(text) =
     Markdown.Parse(text, Environment.NewLine)
 
+  /// Transform Markdown document into HTML format with the
+  /// given mode . The result will be written to the provided
+  /// TextWriter.
+  static member TransformHtml(text, writer:TextWriter, mode, newline) = 
+    let doc = Markdown.Parse(text, newline)
+    formatMarkdown writer mode newline doc.DefinedLinks doc.Paragraphs
+
   /// Transform Markdown document into HTML format. The result
   /// will be written to the provided TextWriter.
   static member TransformHtml(text, writer:TextWriter, newline) = 
     let doc = Markdown.Parse(text, newline)
-    formatMarkdown writer newline doc.DefinedLinks doc.Paragraphs
+    Markdown.TransformHtml(text, writer, newline)
 
   /// Transform Markdown document into HTML format. The result
   /// will be written to the provided TextWriter.
@@ -86,16 +93,31 @@ type Markdown =
     Markdown.TransformHtml(text, Environment.NewLine)
   
   /// Transform the provided MarkdownDocument into HTML
+  /// format with the given mode and write the result
+  /// to a given writer.
+  static member WriteHtml(doc:MarkdownDocument, writer:TextWriter, mode, newline) = 
+    formatMarkdown writer mode newline doc.DefinedLinks doc.Paragraphs
+
+  /// Transform the provided MarkdownDocument into HTML
   /// format and write the result to a given writer.
-  static member WriteHtml(doc:MarkdownDocument, writer, newline) = 
-    formatMarkdown writer newline doc.DefinedLinks doc.Paragraphs
+  static member WriteHtml(doc:MarkdownDocument, writer:TextWriter, newline) = 
+    Markdown.WriteHtml(doc, writer, FormattingMode.Default, newline)
 
   /// Transform the provided MarkdownDocument into HTML
   /// format and return the result as a string.
-  static member WriteHtml(doc:MarkdownDocument, newline) = 
+  static member WriteHtml(doc:MarkdownDocument, newline:string) = 
     let sb = new System.Text.StringBuilder()
     use wr = new StringWriter(sb)
     Markdown.WriteHtml(doc, wr, newline)
+    sb.ToString()
+
+  /// Transform the provided MarkdownDocument into HTML
+  /// format with the given mode and return the result
+  /// as a string.
+  static member WriteHtml(doc:MarkdownDocument, mode:FormattingMode, newline) = 
+    let sb = new System.Text.StringBuilder()
+    use wr = new StringWriter(sb)
+    Markdown.WriteHtml(doc, wr, mode, newline)
     sb.ToString()
 
   /// Transform the provided MarkdownDocument into HTML
@@ -104,9 +126,21 @@ type Markdown =
     Markdown.WriteHtml(doc, Environment.NewLine)
 
   /// Transform the provided MarkdownDocument into HTML
+  /// format with the given mode and return the result
+  /// as a string.
+  static member WriteHtml(doc:MarkdownDocument, mode:FormattingMode) = 
+    Markdown.WriteHtml(doc, mode, Environment.NewLine)
+
+  /// Transform the provided MarkdownDocument into HTML
   /// format and write the result to a given writer.
-  static member WriteHtml(doc:MarkdownDocument, writer) = 
+  static member WriteHtml(doc:MarkdownDocument, writer:TextWriter) = 
     Markdown.WriteHtml(doc, writer, Environment.NewLine)
+
+  /// Transform the provided MarkdownDocument into HTML
+  /// format with the given mode and write the result to
+  /// a given writer.
+  static member WriteHtml(doc:MarkdownDocument, writer:TextWriter, mode:FormattingMode) = 
+    Markdown.WriteHtml(doc, writer, mode, Environment.NewLine)
 
   // -----------------------------------
   // Now the functions for LaTeX format

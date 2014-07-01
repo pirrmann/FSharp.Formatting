@@ -16,7 +16,7 @@ type CompilerContext =
 
 /// Defines the two possible output types from literate script: HTML and LaTeX.
 [<RequireQualifiedAccess>]
-type OutputKind = Html | Latex
+type OutputKind = Html of FSharp.Markdown.Html.FormattingMode | Latex
 
 
 /// Specifies a context that is passed to functions that generate the output

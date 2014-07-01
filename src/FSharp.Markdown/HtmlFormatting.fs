@@ -10,9 +10,29 @@ open System.Collections.Generic
 open FSharp.Patterns
 open FSharp.Collections
 
+let splitWhen checkBoundary xs =
+    let rec splitWhen' acc xs =
+        match xs with
+        | [] -> acc
+        | x :: xs' ->
+            match checkBoundary xs with
+            | Some xs' -> splitWhen' ([] :: acc) xs'
+            | None -> let acc' = match acc with
+                                     | h :: tail -> (x :: h) :: tail
+                                     | [] -> [[x]]
+                      splitWhen' acc' xs'
+
+    splitWhen' [] xs
+    |> List.map List.rev
+    |> List.rev
+
 // --------------------------------------------------------------------------------------
 // Formats Markdown documents as an HTML file
 // --------------------------------------------------------------------------------------
+
+/// Defines the two possible HTML output modes.
+[<RequireQualifiedAccess>]
+type FormattingMode = Default | Reveal
 
 /// Basic escaping as done by Markdown
 let htmlEncode (code:string) = 
@@ -37,6 +57,7 @@ type FormattingContext =
   { LineBreak : unit -> unit
     Newline : string
     Writer : TextWriter
+    Mode: FormattingMode
     Links : IDictionary<string, string * option<string>>
     ParagraphIndent : unit -> unit }
 
@@ -191,19 +212,36 @@ let rec formatParagraph (ctx:FormattingContext) paragraph =
 
 /// Write a list of MarkdownParagraph values to a TextWriter
 and formatParagraphs ctx paragraphs = 
-  let length = List.length paragraphs
   let smallCtx = { ctx with LineBreak = smallBreak ctx }
   let bigCtx = { ctx with LineBreak = bigBreak ctx }
-  for last, paragraph in paragraphs |> Seq.mapi (fun i v -> (i = length - 1), v) do
-    formatParagraph (if last then smallCtx else bigCtx) paragraph
+
+  let formatParagraphs' paragraphs =
+    let length = List.length paragraphs
+    for last, paragraph in paragraphs |> Seq.mapi (fun i v -> (i = length - 1), v) do
+      formatParagraph (if last then smallCtx else bigCtx) paragraph
+
+  match ctx.Mode with
+  | FormattingMode.Default -> formatParagraphs' paragraphs
+  | FormattingMode.Reveal ->
+      let sectionBoundary = function | HorizontalRule :: HorizontalRule :: xs -> Some xs | _ -> None
+      let subSectionBoundary = function | HorizontalRule :: xs -> Some xs | _ -> None
+
+      for mainGroups in paragraphs |> splitWhen sectionBoundary do
+        ctx.Writer.Write("<section>" + ctx.Newline)
+        for paragraphsInGroup in mainGroups |> splitWhen subSectionBoundary do
+          ctx.Writer.Write("<section>" + ctx.Newline)
+          formatParagraphs' paragraphsInGroup
+          ctx.Writer.Write("</section>")
+        ctx.Writer.Write("</section>")
 
 /// Format Markdown document and write the result to 
 /// a specified TextWriter. Parameters specify newline character
 /// and a dictionary with link keys defined in the document.
-let formatMarkdown writer newline links = 
+let formatMarkdown writer mode newline links = 
   formatParagraphs 
     { Writer = writer
-      Links = links
+      Mode = mode
       Newline = newline
+      Links = links
       LineBreak = ignore
       ParagraphIndent = ignore }

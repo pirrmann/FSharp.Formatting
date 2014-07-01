@@ -113,7 +113,7 @@ type ProcessDirectoryOptions() =
                             x.inputDirectory,
                             ?templateFile = (evalString x.templateFile),
                             ?outputDirectory = Some (if x.outputDirectory = "" then x.inputDirectory else x.outputDirectory),
-                            ?format= Some (if (x.format).ToLower() = "html" then OutputKind.Html else OutputKind.Latex),
+                            ?format= Some (if (x.format).ToLower() = "html" then (OutputKind.Html(FSharp.Markdown.Html.FormattingMode.Default)) else OutputKind.Latex),
                             ?formatAgent = None,
                             ?prefix = (evalString x.prefix),
                             ?compilerOptions = (evalString (concat x.compilerOptions)),

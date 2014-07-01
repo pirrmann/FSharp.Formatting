@@ -73,5 +73,4 @@ let processDirectory() =
       "github-link", "https://github.com/tpetricek/FSharp.Formatting"
       "project-name", "F# Formatting" ]
   Literate.ProcessDirectory
-    ( __SOURCE_DIRECTORY__, template, dir + "/output-all", 
-      OutputKind.Html, replacements = projInfo)
+    ( __SOURCE_DIRECTORY__, template, relative "/output-all", replacements = projInfo)
